@@ -1,25 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"telesp/handlers"
+	"telesp/src/web"
 )
 
-type Page struct { // Declare page params
-	Title string
-	Body []byte
-}
-
-
-func handler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Don Anton Gun %s!", r.URL.Path[1:])
-}
 
 func main() {
-    http.HandleFunc("/", handler)
-	handlers.HandlersLunch("/") // This page insert pref str, handler instead
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", http.HandlerFunc(web.Home)) // Превратили функцию home в некоторый возможный обрабочик http запросов
+	// mux.HandleFunc("/snippet", web.ShowSnippet)
+	// mux.HandleFunc("/snippet/create", web.CreateSnippet)
 
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	fileServer := http.FileServer(http.Dir("./internal/static"))
+	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+ 
+	log.Println("Запуск веб-сервера на http://127.0.0.1:4000")
+	err := http.ListenAndServe(":4000", mux)
+	log.Fatal(err)
 }
