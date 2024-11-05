@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Hello</title>
+<!--    <script>-->
+<!--        async function sendHello() {-->
+<!--            try {-->
+<!--                const response = await fetch('/send', {-->
+<!--                    method: 'POST',-->
+<!--                    headers: {-->
+<!--                        'Content-Type': 'application/json'-->
+<!--                    },-->
+<!--                    body: JSON.stringify({ message: "Hello" })-->
+<!--                });-->
+
+<!--                if (response.ok) {-->
+<!--                    alert('Message sent successfully!');-->
+<!--                } else {-->
+<!--                    alert('Failed to send message.');-->
+<!--                }-->
+<!--            } catch (error) {-->
+<!--                console.error('Error:', error);-->
+<!--                alert('Error sending message.');-->
+<!--            }-->
+<!--        }-->
+<!--    </script>-->
+</head>
+<body>
+<!--    <button onclick="sendHello()">Send Hello</button>-->
+    <form action="/send" method="POST">
+        <input type="hidden" name="message" value="Hello my friend">
+        <button type="submit">Send Hello</button>
+    </form>
+</body>
+</html>

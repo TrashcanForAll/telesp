@@ -1,6 +1,8 @@
 package web
 
 import (
+	"fmt"
+
 	// "fmt"
 	"html/template"
 	"log"
@@ -8,10 +10,14 @@ import (
 	// "strconv"
 )
 
+type Message struct {
+	Message string `json:"message"`
+}
+
 func Home(w http.ResponseWriter, r *http.Request) {
 	// Check if cur url match "/" template
 	if r.URL.Path != "/" {
-		http.NotFound(w,r)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -34,27 +40,50 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal Server Error", 500)
 	}
 
+	// TODO: Add fully call of anything SQL func
+
 	// w.Write([]byte("Привет из Snippetbox"))
 }
- 
-// func ShowSnippet(w http.ResponseWriter, r *http.Request) {
-// 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
-// 	if err != nil || id < 1 {
-// 		http.NotFound(w, r)
-// 		return
-// 	}
-	
-// 	fmt.Fprintf(w, "Отображение выбранной заметки c ID: %d...", id)
-// }
- 
 
-// func CreateSnippet(w http.ResponseWriter, r *http.Request) {
-//     if r.Method != http.MethodPost {
-// 		w.Header().Set("Allow", http.MethodPost)
-// 		http.Error(w, "Метод запрещен!", 405)
-//         return
-//     }
- 
-//     w.Write([]byte("Создание новой заметки..."))
-// }
- 
+func SendHandler(w http.ResponseWriter, r *http.Request) {
+	var msg Message
+	fmt.Println("SendHandler function called")
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", 405)
+	}
+
+	// читаем параметр message из формы
+	msg.Message = r.FormValue("message")
+
+	// выводим сообщение в консоль
+	fmt.Println("Recievtd message: ", msg.Message)
+
+	// вернем ответ клиенту
+	fmt.Fprintf(w, "Message recieved: %s", msg.Message)
+	
+	// Handle JSON requests
+
+	//err := json.NewDecoder(r.Body).Decode(&msg)
+	//if err != nil {
+	//	http.Error(w, "Invalid request", http.StatusBadRequest)
+	//	return
+	//}
+	//defer r.Body.Close()
+	//
+	//fmt.Println("Received message:", msg.Message)
+	//w.WriteHeader(http.StatusOK)
+	//w.Write([]byte("Message received"))
+}
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	//http.ServeFile(w, r, "./internal/html/main.html")
+	tp, err := template.ParseFiles("./internal/html/main.html")
+	if err != nil {
+		log.Println(err.Error())
+	}
+	err = tp.Execute(w, nil)
+	if err != nil {
+		log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+	}
+}
