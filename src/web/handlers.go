@@ -59,8 +59,10 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Recievtd message: ", msg.Message)
 
 	// вернем ответ клиенту
-	fmt.Fprintf(w, "Message recieved: %s", msg.Message)
-	
+	// if not send back, we will stay here
+	//fmt.Fprintf(w, "Message recieved: %s", msg.Message)
+
+	http.Redirect(w, r, "/", 302)
 	// Handle JSON requests
 
 	//err := json.NewDecoder(r.Body).Decode(&msg)
