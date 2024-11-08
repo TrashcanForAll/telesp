@@ -2,17 +2,25 @@ package web
 
 import (
 	"fmt"
+	"log"
+	"telesp/pkg/models"
+	"telesp/pkg/models/psql"
 
 	// "fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	// "strconv"
 )
 
+const countOfParams = 1
+
 type Message struct {
-	Message string `json:"message"`
+	Message [countOfParams]string `json:"message"`
 }
+
+var storageData = models.TestPerson{}
+var logger = slog.Logger{}
 
 func Home(w http.ResponseWriter, r *http.Request) {
 	// Check if cur url match "/" template
@@ -47,22 +55,29 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 func SendHandler(w http.ResponseWriter, r *http.Request) {
 	var msg Message
-	fmt.Println("SendHandler function called")
+	log.Println("SendHandler function called")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", 405)
 	}
 
 	// читаем параметр message из формы
-	msg.Message = r.FormValue("message")
+	for i := 0; i < countOfParams; i++ {
+		msg.Message[i] = r.FormValue("field" + string(i+1))
+	}
 
 	// выводим сообщение в консоль
 	fmt.Println("Recievtd message: ", msg.Message)
 
-	// вернем ответ клиенту
-	// if not send back, we will stay here
-	//fmt.Fprintf(w, "Message recieved: %s", msg.Message)
+	sp, err := psql.OpenConn()
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	sp.Get(&storageData)
+	fmt.Printf("Id: %d; Name: %s;", storageData.Id, storageData.Name)
 
 	http.Redirect(w, r, "/", 302)
+
 	// Handle JSON requests
 
 	//err := json.NewDecoder(r.Body).Decode(&msg)

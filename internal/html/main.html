@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Send Hello</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <!--    <script>-->
 <!--        async function sendHello() {-->
 <!--            try {-->
@@ -29,9 +31,18 @@
 </head>
 <body>
 <!--    <button onclick="sendHello()">Send Hello</button>-->
-    <form action="/send" method="POST">
-        <input type="hidden" name="message" value="Hello my friend">
-        <button type="submit">Send Hello</button>
-    </form>
+    <div class="container">
+        <form action="/send" method="POST">
+            <label for="field1">Field 1</label>
+            <input type="text" id="field1" name="field1" required>
+
+            <label for="field2">Field 1</label>
+            <input type="text" id="field2" name="field2" required>
+
+            <button type="submit">Submit</button>
+            <!--        <input type="hidden" name="message" value="Hello my friend">-->
+            <!--        <button type="submit">Send Hello</button>-->
+        </form>
+    </div>
 </body>
 </html>

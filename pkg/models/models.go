@@ -18,3 +18,7 @@ type PersonData struct {
 	PhoneNumber int
 }
 
+type TestPerson struct {
+	Id   int
+	Name string
+}

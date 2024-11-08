@@ -3,6 +3,7 @@ package psql
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	"log"
 	"telesp/pkg/models"
 )
@@ -11,7 +12,8 @@ var connection connParams = connParams{
 	host:     "localhost",
 	password: "1234",
 	user:     "postgres",
-	dbname:   "postgres",
+	dbname:   "telesp",
+	port:     "5432",
 }
 
 type connParams struct {
@@ -19,6 +21,7 @@ type connParams struct {
 	password string
 	dbname   string
 	host     string
+	port     string
 }
 
 type TeleSp struct {
@@ -26,31 +29,21 @@ type TeleSp struct {
 }
 
 // TODO: creation all funcs of work with db
-func OpenConn() (*sql.DB, error) {
+func OpenConn() (TeleSp, error) {
+
 	connStr := func() (CS string) { //MARK: CS = shorter name of connStr
 		// SASL -> "user=username password=password host=localhost dbname=mydb sslmode=disable"
-		CS = fmt.Sprintf("user=%s password=%s host=%V dbname=%s sslmode=disable", connection.user, connection.password, connection.host, connection.dbname)
+		CS = fmt.Sprintf("user=%s port=%s password=%s host=%s dbname=%s sslmode=disable", connection.user, connection.port, connection.password, connection.host, connection.dbname)
 		return CS
 	}()
+
 	db, err := sql.Open("postgres", connStr)
-	return db, err
-}
-
-func ExecuteQuery(act string) {
-	db, err := OpenConn()
 	if err != nil {
-		panic(err)
+		fmt.Println("not connect")
+		fmt.Println(err)
 	}
-	defer db.Close()
 
-	testTeleSp := &TeleSp{DB: db}
-
-	// Start call functions
-	//switch act {
-	//case "GET":
-	//	testTeleSp.Get()
-	//}
-	testTeleSp.Get()
+	return TeleSp{DB: db}, err
 }
 
 // TODO: make a Insert func
@@ -61,35 +54,15 @@ func (m *TeleSp) Insert() error {
 }
 
 // Find - select func for looking for based offered params
-func (m *TeleSp) Get() (*models.PersonData, error) {
-	tx, err := m.DB.Begin()
-	if err != nil {
-		return nil, err
-	}
+// TODO: add [id] param into Get func
+func (m *TeleSp) Get(storage *models.TestPerson) {
 
 	someParams := 1
-	rows, err := tx.Query("SELECT * FROM person WHERE id = ?", someParams)
+	row := m.DB.QueryRow("SELECT id, name FROM main WHERE id = $1", someParams)
+
+	err := row.Scan(&storage.Id, &storage.Name)
 	if err != nil {
-		log.Fatal("Ошибка выполнения запроса:", err)
-	}
-	defer rows.Close()
-
-	// Обрабатываем результат запроса
-	for rows.Next() {
-		var id int
-		var name string
-		if err := rows.Scan(&id, &name); err != nil {
-			log.Fatal("Ошибка сканирования строки:", err)
-		}
-		fmt.Printf("id:%d name:%s\n", id, name)
+		log.Fatal("telesp.go; Error of scan string: ", err)
 	}
 
-	// Проверяем на ошибки после обработки строк
-	if err := rows.Err(); err != nil {
-		log.Fatal("Ошибка при итерации по строкам: ", err)
-	}
-
-	return nil, nil
 }
-
-//
