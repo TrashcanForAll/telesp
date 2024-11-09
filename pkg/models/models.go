@@ -19,6 +19,6 @@ type PersonData struct {
 }
 
 type TestPerson struct {
-	Id   int
-	Name string
+	FirstName string `json: "first_name"`
+	LastName  string `json: "last_name"`
 }

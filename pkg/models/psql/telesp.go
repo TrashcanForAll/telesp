@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
-	"log"
 	"telesp/pkg/models"
 )
 
@@ -57,12 +56,12 @@ func (m *TeleSp) Insert() error {
 // TODO: add [id] param into Get func
 func (m *TeleSp) Get(storage *models.TestPerson) {
 
-	someParams := 1
-	row := m.DB.QueryRow("SELECT id, name FROM main WHERE id = $1", someParams)
-
-	err := row.Scan(&storage.Id, &storage.Name)
-	if err != nil {
-		log.Fatal("telesp.go; Error of scan string: ", err)
-	}
+	//someParams := 1
+	//row := m.DB.QueryRow("SELECT id, name FROM main WHERE id = $1", someParams)
+	//
+	////err := row.Scan(&storage.Id, &storage.Name)
+	//if err != nil {
+	//	log.Fatal("telesp.go; Error of scan string: ", err)
+	//}
 
 }

@@ -32,17 +32,25 @@
 <body>
 <!--    <button onclick="sendHello()">Send Hello</button>-->
     <div class="container">
-        <form action="/send" method="POST">
+        <form id="myForm" action="/" method="POST">
             <label for="field1">Field 1</label>
             <input type="text" id="field1" name="field1" required>
 
-            <label for="field2">Field 1</label>
+            <label for="field2">Field 2</label>
             <input type="text" id="field2" name="field2" required>
 
+<!--            // TODO: add 4 label and input tags-->
+
             <button type="submit">Submit</button>
-            <!--        <input type="hidden" name="message" value="Hello my friend">-->
-            <!--        <button type="submit">Send Hello</button>-->
         </form>
+    </div>
+    <div class="form-group">
+        <label>Phone book data:</label>
+        <ul type="hidden" id="dataList" class="list-group">
+            {{range .}}
+            <li class="list-group-item">{{.}}</li>
+            {{end}}
+        </ul>
     </div>
 </body>
 </html>
