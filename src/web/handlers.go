@@ -8,6 +8,8 @@ import (
 	"log"
 	"strconv"
 	"telesp/pkg/models"
+	"telesp/pkg/models/psql"
+
 	// "fmt"
 	"html/template"
 	"log/slog"
@@ -61,12 +63,9 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", 405)
 	}
-	// test
-	//p1 := r.FormValue("field1")
-	//p2 := r.FormValue("field2")
-	//fmt.Println("Aboba: ", p1, p2)
 
-	var data models.TestPerson
+	var data models.PersonData
+	var respData = []models.PersonData{}
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&data); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -74,41 +73,31 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	// Prints
-	fmt.Println(data.FirstName)
-	fmt.Println(data.LastName)
-
-	data.FirstName = data.FirstName + "aboba"
-	data.LastName = data.LastName + "aboba"
-
-	err := json.NewEncoder(w).Encode(data)
+	db, err := psql.OpenConn()
 	if err != nil {
 		log.Println(err)
 	}
-	// выводим сообщение в консоль
-	//fmt.Println("Recievtd message: ", msg.Message[0], msg.Message[1])
 
-	//sp, err := psql.OpenConn()
-	//if err != nil {
-	//	log.Println(err.Error())
-	//}
-
-	//sp.Get(&storageData)
-	//fmt.Printf("Id: %d; Name: %s;", storageData.Id, storageData.Name)
-
-	//tp, err := template.ParseFiles("./internal/html/main.html")
-	//if err != nil {
-	//	log.Println(err.Error())
-	//}
-	//err = tp.Execute(w, msg.Message)
-	//if err != nil {
-	//	log.Println(err.Error())
-	//	http.Error(w, "Internal Server Error", 500)
-	//}
+	respData = db.Get(&data)
+	for _, v := range respData {
+		fmt.Println(v)
+	}
+	// Prints
+	//fmt.Println(respData[0].FirstName)
+	//fmt.Println(data.LastName)
 	//
-	//http.Redirect(w, r, "/", 302)
+	//data.FirstName = data.FirstName + "aboba"
+	//data.LastName = data.LastName + "aboba"
+
+	//for i, _ := range respData {
+	err = json.NewEncoder(w).Encode(respData)
+	if err != nil {
+		log.Println(err)
+	}
+	//}
+
 }
-func formJsonStr(data models.TestPerson) []byte {
+func formJsonStr(data models.PersonData) []byte {
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err.Error())
@@ -132,8 +121,8 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if r.Method == http.MethodPost {
-		data := models.TestPerson{}
-		respData := models.TestPerson{}
+		data := models.PersonData{}
+		respData := []models.PersonData{}
 
 		tp, err := template.ParseFiles("./internal/html/main.html")
 		if err != nil {
@@ -143,16 +132,22 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		//for i := 0; i < countOfParams; i++ {
 		data.FirstName = r.FormValue("field" + strconv.Itoa(1))
 		data.LastName = r.FormValue("field" + strconv.Itoa(2))
-
+		data.MiddleName = r.FormValue("field" + strconv.Itoa(3))
+		data.Street = r.FormValue("field" + strconv.Itoa(4))
+		data.House = r.FormValue("field" + strconv.Itoa(5))
+		data.Building = r.FormValue("field" + strconv.Itoa(6))
+		data.Apartment = r.FormValue("field" + strconv.Itoa(7))
+		data.PhoneNumber = r.FormValue("field" + strconv.Itoa(8))
+		fmt.Println("Igorava", r)
 		jsonData := formJsonStr(data)
 
 		resp, err := http.Post("http://127.0.0.1:8080/send", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
 			log.Println(err.Error())
 		}
-		fmt.Println("aboba was added")
+		//fmt.Println("aboba was added")
 		defer resp.Body.Close()
-		fmt.Println("response Status:", resp.Body)
+		//fmt.Println("response Status:", resp.Body)
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			fmt.Println("Read response error:", err)
@@ -165,10 +160,14 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Unmarshal response error:", err)
 		}
 		//print new params
-		fmt.Println(respData.FirstName)
-		fmt.Println(respData.LastName)
+		//fmt.Println(data.FirstName)
+		//fmt.Println(data.LastName)
 
-		err = tp.Execute(w, []string{respData.FirstName, respData.LastName})
+		showDataArr := []string{}
+		for _, v := range respData {
+			showDataArr = append(showDataArr, fmt.Sprintf("%v %v %v %v %v %v %v %v", v.FirstName, v.LastName, v.MiddleName, v.Street, v.House, v.Building, v.Apartment, v.PhoneNumber))
+		}
+		err = tp.Execute(w, showDataArr)
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, "Internal Server Error", 500)
