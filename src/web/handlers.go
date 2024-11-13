@@ -1,14 +1,12 @@
 package web
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"strconv"
 	"telesp/pkg/models"
 	"telesp/pkg/models/psql"
+	sh "telesp/src/web/subhendlers"
 
 	// "fmt"
 	"html/template"
@@ -77,6 +75,7 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 	}
+	defer db.DB.Close()
 
 	respData = db.Get(&data)
 	for _, v := range respData {
@@ -97,13 +96,27 @@ func SendHandler(w http.ResponseWriter, r *http.Request) {
 	//}
 
 }
-func formJsonStr(data models.PersonData) []byte {
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		log.Println(err.Error())
+
+func AddHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", 405)
 	}
-	fmt.Println("jsonFile: ", jsonData)
-	return jsonData
+	var data models.PersonData
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&data); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	db, err := psql.OpenConn()
+	if err != nil {
+		log.Println(err)
+	}
+	defer db.DB.Close()
+
+	err = db.Insert(&data)
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,56 +134,38 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if r.Method == http.MethodPost {
-		data := models.PersonData{}
-		respData := []models.PersonData{}
+		if r.FormValue("search") == "Select" {
+			tp, err := template.ParseFiles("./internal/html/main.html")
+			if err != nil {
+				log.Println(err.Error())
+			}
 
-		tp, err := template.ParseFiles("./internal/html/main.html")
-		if err != nil {
-			log.Println(err.Error())
-		}
+			showDataArr := sh.SelectHandler(r)
 
-		//for i := 0; i < countOfParams; i++ {
-		data.FirstName = r.FormValue("field" + strconv.Itoa(1))
-		data.LastName = r.FormValue("field" + strconv.Itoa(2))
-		data.MiddleName = r.FormValue("field" + strconv.Itoa(3))
-		data.Street = r.FormValue("field" + strconv.Itoa(4))
-		data.House = r.FormValue("field" + strconv.Itoa(5))
-		data.Building = r.FormValue("field" + strconv.Itoa(6))
-		data.Apartment = r.FormValue("field" + strconv.Itoa(7))
-		data.PhoneNumber = r.FormValue("field" + strconv.Itoa(8))
-		fmt.Println("Igorava", r)
-		jsonData := formJsonStr(data)
+			err = tp.Execute(w, showDataArr)
+			if err != nil {
+				log.Println(err.Error())
+				http.Error(w, "Internal Server Error", 500)
+			}
 
-		resp, err := http.Post("http://127.0.0.1:8080/send", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			log.Println(err.Error())
 		}
-		//fmt.Println("aboba was added")
-		defer resp.Body.Close()
-		//fmt.Println("response Status:", resp.Body)
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Read response error:", err)
-			return
-		}
-		fmt.Println("Response: ", string(body))
+		if r.FormValue("add") == "Add" {
 
-		// Unmarshal
-		if err := json.Unmarshal(body, &respData); err != nil {
-			fmt.Println("Unmarshal response error:", err)
-		}
-		//print new params
-		//fmt.Println(data.FirstName)
-		//fmt.Println(data.LastName)
+			sh.AddHandler(r)
 
-		showDataArr := []string{}
-		for _, v := range respData {
-			showDataArr = append(showDataArr, fmt.Sprintf("%v %v %v %v %v %v %v %v", v.FirstName, v.LastName, v.MiddleName, v.Street, v.House, v.Building, v.Apartment, v.PhoneNumber))
+			tp, err := template.ParseFiles("./internal/html/main.html")
+			if err != nil {
+				log.Println(err.Error())
+			}
+			err = tp.Execute(w, nil)
+			if err != nil {
+				log.Println(err.Error())
+				http.Error(w, "Internal Server Error", 500)
+			}
 		}
-		err = tp.Execute(w, showDataArr)
-		if err != nil {
-			log.Println(err.Error())
-			http.Error(w, "Internal Server Error", 500)
+		if r.FormValue("update") == "Update" {
+		}
+		if r.FormValue("delete") == "Delete" {
 		}
 	}
 

@@ -3,7 +3,8 @@ package psql
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
+	//_ "github.com/lib/pq"
 	"log"
 	"telesp/pkg/models"
 )
@@ -42,75 +43,27 @@ func OpenConn() (TeleSp, error) {
 		fmt.Println("not connect")
 		fmt.Println(err)
 	}
-
 	return TeleSp{DB: db}, err
-}
-
-func (m *TeleSp) SecondaryTablesQuery(storage *models.PersonData) []int {
-	params := make([]int, 8)
-	if storage.FirstName != "" {
-		row := m.DB.QueryRow("SELECT id FROM firstname WHERE firstname_val = $1", storage.FirstName)
-		err := row.Scan(&params[0])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; FirstName ", err)
-		}
-	}
-	if storage.LastName != "" {
-		row := m.DB.QueryRow("SELECT id FROM lastname WHERE lastname_val = $1", storage.LastName)
-		err := row.Scan(&params[1])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; LastName ", err)
-		}
-	}
-	if storage.MiddleName != "" {
-		row := m.DB.QueryRow("SELECT id FROM middlename WHERE middlename_val = $1", storage.MiddleName)
-		err := row.Scan(&params[2])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; MiddleName ", err)
-		}
-	}
-	if storage.Street != "" {
-		row := m.DB.QueryRow("SELECT id FROM street WHERE street_val = $1", storage.Street)
-		err := row.Scan(&params[3])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; Street ", err)
-		}
-	}
-	if storage.House != "" {
-		row := m.DB.QueryRow("SELECT id FROM house WHERE house_val = $1", storage.House)
-		err := row.Scan(&params[4])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; House ", err)
-		}
-	}
-	if storage.Building != "" {
-		row := m.DB.QueryRow("SELECT id FROM building WHERE building_val = $1", storage.Building)
-		err := row.Scan(&params[5])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; Building ", err)
-		}
-	}
-	if storage.Apartment != "" {
-		row := m.DB.QueryRow("SELECT id FROM apartment WHERE apartment_val = $1", storage.Apartment)
-		err := row.Scan(&params[6])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; Apartment ", err)
-		}
-	}
-	if storage.PhoneNumber != "" {
-		row := m.DB.QueryRow("SELECT id FROM phonenumber WHERE building_val = $1", storage.PhoneNumber)
-		err := row.Scan(&params[7])
-		if err != nil {
-			log.Fatal("SecondaryTablesQuery; PhoneNumber ", err)
-		}
-	}
-	return params
 }
 
 // TODO: make a Insert func
 
 // Insert
-func (m *TeleSp) Insert() error {
+func (m *TeleSp) Insert(storage *models.PersonData) error {
+	data := []string{
+		storage.FirstName,
+		storage.LastName,
+		storage.MiddleName,
+		storage.Street,
+		storage.House,
+		storage.Building,
+		storage.Apartment,
+		storage.PhoneNumber,
+	}
+	_, err := m.DB.Exec("CALL insert_to_main($1);", pq.Array(data))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -118,7 +71,13 @@ func (m *TeleSp) Insert() error {
 // TODO: add [id] param into Get func
 func (m *TeleSp) Get(storage *models.PersonData) []models.PersonData {
 	//IdParams := m.SecondaryTablesQuery(storage)
-	Query := CreateSqlQuery(storage)
+	var Query string
+	if storage.FirstName+storage.LastName+storage.MiddleName+storage.Street+
+		storage.House+storage.Building+storage.Apartment+storage.PhoneNumber == "" {
+		Query = AllRows()
+	} else {
+		Query = CreateSqlQuery(storage)
+	}
 	response := []models.PersonData{}
 
 	rows, err := m.DB.Query(Query)

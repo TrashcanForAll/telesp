@@ -16,6 +16,7 @@ func main() {
 	//mux.HandleFunc("/", http.HandlerFunc(web.Home)) // Превратили функцию home в некоторый возможный обрабочик http запросов
 	mux.HandleFunc("/", http.HandlerFunc(web.IndexHandler))
 	mux.HandleFunc("/send", web.SendHandler)
+	mux.HandleFunc("/add", web.AddHandler)
 	// mux.HandleFunc("/snippet", web.ShowSnippet)
 	// mux.HandleFunc("/snippet/create", web.CreateSnippet)
 
